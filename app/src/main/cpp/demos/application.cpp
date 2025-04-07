@@ -25,21 +25,22 @@ public:
     virtual void inputEvent(int leftright, const ApplicationEvent& event) override;
     virtual void renderFrame(const XrPosef& pose, const glm::mat4& project, const glm::mat4& view, int32_t eye) override;
 private:
-    void layout();
+    void layout();//布局UI
     void showDashboard(const glm::mat4& project, const glm::mat4& view);
     void showDashboardController();
     void showDeviceInformation(const glm::mat4& project, const glm::mat4& view);
     void renderHandTracking(const glm::mat4& project, const glm::mat4& view);
+    virtual void renderFixedCube(const glm::mat4& project, const glm::mat4& view);//4.6添加，用于渲染固定位置立方体
     // Calculate the angle between the vector v and the plane normal vector n
     float angleBetweenVectorAndPlane(const glm::vec3& vector, const glm::vec3& normal);
 
-private:
+private://私有成员变量
     std::shared_ptr<IGraphicsPlugin> mGraphicsPlugin;
     std::shared_ptr<Controller> mController;
     std::shared_ptr<Hand> mHandTracker;
     std::shared_ptr<Gui> mPanel;
     std::shared_ptr<Text> mTextRender;
-    std::shared_ptr<Player> mPlayer;
+    std::shared_ptr<Player> mPlayer;//媒体播放器
     glm::mat4 mControllerModel;
     XrPosef mControllerPose[HAND_COUNT];
     std::shared_ptr<CubeRender> mCubeRender;
@@ -47,7 +48,7 @@ private:
     //openxr
     XrInstance m_instance;          //Keep the same naming as openxr_program.cpp
     XrSession m_session;
-    std::vector<XrView> m_views;
+    std::vector<XrView> m_views;//视图配置
     float mIpd;
     XrHandJointLocationEXT m_jointLocations[HAND_COUNT][XR_HAND_JOINT_COUNT_EXT];
 
@@ -55,7 +56,7 @@ private:
     std::string mDeviceModel;
     std::string mDeviceOS;
 
-    bool mIsShowDashboard = true;
+    bool mIsShowDashboard = true;//改这里原本的文本会变成乱码
 
     const ApplicationEvent *mControllerEvent[HAND_COUNT];
 
@@ -73,7 +74,7 @@ Application::Application(const std::shared_ptr<struct Options>& options, const s
     mTextRender = std::make_shared<Text>();
     mPlayer = std::make_shared<Player>();
     mCubeRender = std::make_shared<CubeRender>();
-}
+}//初始化各组件（智能指针会自动管理资源）
 
 Application::~Application() {
 }
@@ -83,16 +84,16 @@ bool Application::initialize(const XrInstance instance, const XrSession session)
     m_session = session;
 
     // get device model
-    mDeviceModel = "Rokid AR Station";
+    mDeviceModel = "好难";
 
     //get OS version
     //__system_property_get("ro.system.build.id", buffer); // You can also call this function, the result is the same
-    mDeviceOS = "OpenXR";
+    mDeviceOS = "It is HARD";
 
     mController->initialize(mDeviceModel);
     mHandTracker->initialize(); // zhfzhf
 
-    mPanel->initialize(600, 800);  //set resolution
+    mPanel->initialize(600, 800);  //set resolution，仪表盘吧
     mTextRender->initialize();
     mCubeRender->initialize();
 
@@ -108,7 +109,7 @@ void Application::setControllerPose(int leftright, const XrPosef& pose) {
     XrVector3f scale{1.0f, 1.0f, 1.0f};
     XrMatrix4x4f_CreateTranslationRotationScale(&model, &pose.position, &pose.orientation, &scale);
     glm::mat4 m = glm::make_mat4((float*)&model);
-    mController->setModel(leftright, m);
+    mController->setModel(leftright, m);//将变换矩阵设置到控制器
     mHandTracker->setModel(leftright, m); // zhfzhf
     mControllerPose[leftright] = pose;
 }
@@ -140,7 +141,7 @@ void Application::layout() {
     float scale = 1.0f;
 
     float width, height;
-    mPanel->getWidthHeight(width, height);
+    mPanel->getWidthHeight(width, height);//面板尺寸获取
     scale = 0.7;
     model = glm::translate(model, glm::vec3(-0.0f, -0.3f, -1.0f));
     model = glm::rotate(model, glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -151,7 +152,7 @@ void Application::layout() {
     model = glm::translate(model, glm::vec3(1.0f, -0.0f, -1.5f));
     model = glm::rotate(model, glm::radians(-20.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, glm::vec3(scale*2, scale, 1.0f));
-    mPlayer->setModel(model);
+    mPlayer->setModel(model);//播放器变换矩阵
 }
 
 void Application::showDashboardController() {
@@ -197,7 +198,7 @@ void Application::showDashboard(const glm::mat4& project, const glm::mat4& view)
     //test controller
     showDashboardController();
 
-    ImGui::Text("Please use the hand ray to pinch click.");
+    ImGui::Text("Go Go Go");
 
     mPanel->end();
     mPanel->render(project, view);
@@ -249,7 +250,7 @@ float Application::angleBetweenVectorAndPlane(const glm::vec3& vector, const glm
 //};
 
 void Application::renderHandTracking(const glm::mat4& project, const glm::mat4& view) {
-    std::vector<CubeRender::Cube> cubes;
+    std::vector<CubeRender::Cube> cubes;//立方体容器
     for (auto hand = 0; hand < HAND_COUNT; hand++) {
         for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
             XrHandJointLocationEXT& jointLocation = m_jointLocations[hand][i];
@@ -258,7 +259,7 @@ void Application::renderHandTracking(const glm::mat4& project, const glm::mat4& 
                 XrMatrix4x4f m{};
                 XrVector3f scale{1.0f, 1.0f, 1.0f};
                 XrMatrix4x4f_CreateTranslationRotationScale(&m, &jointLocation.pose.position, &jointLocation.pose.orientation, &scale);
-                glm::mat4 model = glm::make_mat4((float*)&m);
+                glm::mat4 model = glm::make_mat4((float*)&m);//创建关节变换矩阵
 
                 CubeRender::Cube cube;
                 cube.model = model;
@@ -274,9 +275,43 @@ void Application::renderHandTracking(const glm::mat4& project, const glm::mat4& 
     mCubeRender->render(project, view, cubes);
 }
 
+void Application::renderFixedCube(const glm::mat4& project, const glm::mat4& view) {
+    glm::mat4 model = glm::mat4(1.0f);
+
+    const float distanceFromView = 1.5f;
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, -distanceFromView));
+
+    // 添加旋转效果（随时间旋转）
+    static float rotationAngle = 0.0f;
+    rotationAngle += 0.5f; // 每帧旋转0.5度
+    if(rotationAngle > 360.0f) rotationAngle -= 360.0f;
+
+    // 绕Y轴旋转（水平旋转）
+    model = glm::rotate(model, glm::radians(rotationAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    const float cubeSize = 0.2f;
+    model = glm::scale(model, glm::vec3(cubeSize));
+
+    CubeRender::Cube fixedCube;
+    fixedCube.model = model;
+    fixedCube.scale = 1.0f;
+
+    std::vector<CubeRender::Cube> cubes;
+    cubes.push_back(fixedCube);
+
+    glDisable(GL_DEPTH_TEST); // 禁用深度测试
+    glDisable(GL_CULL_FACE);  // 禁用面剔除
+
+    mCubeRender->render(project, view, cubes);
+
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+}
+
+//每一帧都会渲染
 void Application::renderFrame(const XrPosef& pose, const glm::mat4& project, const glm::mat4& view, int32_t eye) {
     layout();
-    showDeviceInformation(project, view);
+//    showDeviceInformation(project, view);
 
     mPlayer->render(project, view, eye);
 
@@ -286,6 +321,9 @@ void Application::renderFrame(const XrPosef& pose, const glm::mat4& project, con
 
     mController->render(project, view);
 
+
     renderHandTracking(project, view);
+
+    renderFixedCube(project, view);
 
 }

@@ -16,7 +16,7 @@
 #define MAKE_TO_STRING_FUNC(enumType)                  \
     inline const char* to_string(enumType e) {         \
         switch (e) {                                   \
-            XR_LIST_ENUM_#(ENUM_CASE_STR)     \
+            XR_LIST_ENUM_##enumType(ENUM_CASE_STR)     \
             default: return "Unknown " #enumType;      \
         }                                              \
     }

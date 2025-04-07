@@ -58,6 +58,8 @@ public:
     virtual void setHandJointLocation(XrHandJointLocationEXT* location) = 0;
     virtual void inputEvent(int leftright, const ApplicationEvent& event) = 0;
     virtual void renderFrame(const XrPosef& pose, const glm::mat4& project, const glm::mat4& view, int32_t eye) = 0;
+
+
 };
 
 struct Options;
